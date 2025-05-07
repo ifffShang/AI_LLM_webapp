@@ -6,6 +6,7 @@ from style.style import apply_custom_styles
 apply_custom_styles()
 from utils.query_cache import get_cached_answer  # Import the caching utility
 import re
+import urllib.parse # Keep this if you use it for PDF links or other URLs
 
 def display_gatsby_profile():
     st.markdown("""
@@ -29,71 +30,89 @@ def display_gatsby_profile():
     </div>
     """, unsafe_allow_html=True)
 
-import re
-import streamlit as st
-
 def display_vertical_timeline(timeline_text):
-    # Regex to find sections: captures title and content block
-    pattern = r'### \*\*(.*?)\*\*(.*?)(?=### \*\*|$)'
-    matches = re.findall(pattern, timeline_text, re.DOTALL)
+    processed_sections = [] # To hold {"title": "Main Section Title", "content_lines": ["- **Bullet...**", ...]}
 
-    processed_sections = []
-    for title, content_block in matches:
-        cleaned_title = title.strip()
-        points = []
-        # Process the content block for bullet points
-        for line in content_block.strip().split('\n'):
-            stripped_line = line.strip()
-            if stripped_line.startswith('-'):
-                point = stripped_line[1:].strip()
-                points.append(point)
-        
-        if cleaned_title or points: # Keep section if it has a title or points
-            processed_sections.append({"title": cleaned_title, "points": points})
+    raw_major_sections = re.split(r'\n?(?=### \*\*)', timeline_text.strip())
+
+    for section_block_raw in raw_major_sections:
+        section_block = section_block_raw.strip()
+        if not section_block:  # Skip empty parts from split
+            continue
+
+        lines = section_block.split('\n')
+        first_line = lines.pop(0).strip() # This should be the "### **Title**" line
+
+        # Extract title from "### **Title**"
+        title_match = re.match(r"^### \*\*(.*?)\*\*", first_line)
+        if not title_match:
+            continue
     
-    # Guarding the debug print statement
-    if processed_sections:
-        print(processed_sections[0])     
-
-    html_parts = ["<div class='cards-container-timeline'><div class='cards-line'><h2 style='text-align: center; color: #6c5ce7;'>Gatsby's Timeline</h2>"]
+        card_main_title = title_match.group(1).strip()
+    
+        content_detail_lines = [line.strip() for line in lines if line.strip()] # Get non-empty, stripped lines
+    
+        if card_main_title: # Add section if it has a title
+            processed_sections.append({
+                "title": card_main_title,
+                "content_lines": content_detail_lines 
+            })
+    
+    if not processed_sections:
+        st.warning("No timeline sections found in the expected format. The LLM output might not match the prompt's requested structure.")
+        return
+    
+    # ---- HTML Generation ----
+    html_parts = [
+        "<div class='cards-container-timeline'>",
+        "<div class='cards-line'>", # This div has the ::before pseudo-element for the vertical line
+        "<h2 style='text-align: left; width:100%; padding-left:10px; margin-bottom:20px;'>Timeline</h2>"
+    ]
+    
     for idx, section_data in enumerate(processed_sections):
         section_html_content = ""
-        current_title = section_data.get('title', '') 
+        current_card_title = section_data.get('title', 'Untitled Section')
+        content_lines_list = section_data.get('content_lines', [])
 
-        # Only display the <h4> title if the title string exists and contains numbers
-        if current_title:
-            title_has_numbers = any(char.isdigit() for char in current_title)
-            if title_has_numbers:
-                section_html_content += f"<h4>{current_title}</h4>"
-            # If title does not have numbers, the <h4> tag for the title is skipped.
+        # Add title for the card
+        section_html_content += f"<h4>{current_card_title}</h4>"
         
-        if section_data.get('points'): # Check if 'points' key exists and has items
-            section_html_content += "<ul>"
-            for point in section_data['points']:
-                section_html_content += f"<li>{point}</li>"
-            section_html_content += "</ul>"
+        # Add content, joining lines with <br> for HTML display
+        if content_lines_list:
+            html_formatted_content = "<br>".join(content_lines_list)
+            section_html_content += f"<p>{html_formatted_content}</p>"
+        else:
+            section_html_content += "<p>No details provided for this section.</p>"
 
-        # Add the card to HTML parts only if there's actual content generated for it
-        if section_html_content.strip(): 
-            if idx % 2 == 0:
-                html_parts.append(f"<div class='card-section-left'>{section_html_content}</div>")
-            else:
-                html_parts.append(f"<div class='card-section-right'>{section_html_content}</div>")
-            
-    html_parts.append("</div></div>")
+
+        pdf_page_num = idx + 1 
+
+        pdf_link_html = f"""
+        <div style="text-align: right; margin-top: 10px;">
+            <a href="the-great-gatsby.pdf#page={pdf_page_num}" target="_blank" style="display: inline-block; background-color: #5d4ba1; color: white; 
+                       padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+                       📖 Ref Source {pdf_page_num}</a>
+        </div>
+        """
+        section_html_content += pdf_link_html
+
+        title_has_numbers = any(char.isdigit() for char in current_card_title)
+        card_class = ''
+        if not title_has_numbers: 
+            card_class = 'card-section-middle' 
+        elif idx % 2 == 0:  
+            card_class = 'card-section-left'
+        else:  
+            card_class = 'card-section-right'
+        
+        html_parts.append(f"<div class='{card_class}'>{section_html_content}</div>")
+
+    html_parts.append("</div></div>") # Close .cards-line and .cards-container-timeline
     final_html = "".join(html_parts)
-    st.markdown(final_html, unsafe_allow_html=True)   
+    st.markdown(final_html, unsafe_allow_html=True)
 
     
-
-
-
-# Main page content
-st.markdown("""
-<h1 style='text-align: center; color: #6c5ce7;'>Gatsby's Timeline</h1>
-<p style='text-align: center; color: gray;'>Key events in Jay Gatsby's life from "The Great Gatsby"</p>
-""", unsafe_allow_html=True)
-        
+      
     
 if "user_query" not in st.session_state:
     st.warning("Please ask a question first.")
@@ -104,15 +123,20 @@ query = st.session_state["user_query"]
 prompt = f"""
 {query}
 
-Please respond in the following exact format:
+### **Beginning**
+- **Overview:** [Brief summary of Gatsby's early background and character motivation]  
 
-### **[Section Title]**
+### **[Main Section Title]**
 - **[Bullet Title]:** [Details]  
 - **[Bullet Title]:** [Details]  
 
-### **[Another Section]**
+### **[Next Section Title]**
 - **[Bullet Title]:** [Details]  
-...
+- **[Bullet Title]:** [Details]  
+
+### **Final Summary**
+- **Reflection:** [Summarize Gatsby's life arc and legacy]  
+- **Quote:** *"[Meaningful quote from the novel]*"  
 """
 
 
@@ -133,7 +157,7 @@ with st.spinner("Thinking..."):
             print("not from cache")
         
         # timeline_query = "Create a detailed timeline of Jay Gatsby's life with key events in chronological order"
-        result, source_docs, from_cache = get_cached_answer(prompt, qa_chain)
+            result, source_docs, from_cache = get_cached_answer(prompt, qa_chain)
         display_gatsby_profile()
         print(result)
         
@@ -183,10 +207,10 @@ with st.spinner("Thinking..."):
 
         if st.button("Answer") and query:
             st.session_state["user_query"] = query
-            if "time" in query:
-                st.switch_page("pages/timelinePage.py")
-            else:
-                st.switch_page("pages/answerPage.py")
+            # if "time" in query:
+            st.switch_page("pages/timelinePage.py")
+            # else:
+            # st.switch_page("pages/answerPage.py")
 
         st.markdown("### 🧠 Answer")
         st.success(result)
@@ -202,52 +226,3 @@ with st.spinner("Thinking..."):
         
     except Exception as e:
         st.error(f"⚠️ {str(e)}")
-
-def parse_structured_timeline(timeline_text):
-    """
-    Parses a timeline text with main headings, numbered items, and sub-bullets.
-    Returns a list of dictionaries, each representing a part of the timeline.
-    """
-    parsed_data = []
-    current_item_sub_points = None # To hold sub-points for the current numbered item
-
-    for line in timeline_text.strip().split('\n'):
-        line = line.rstrip() # Keep leading spaces for sub-bullets, remove trailing
-
-        # Try to match main heading (e.g., ### **Title**)
-        main_heading_match = re.match(r"^### \*\*(.*?)\*\*\s*$", line)
-        if main_heading_match:
-            if current_item_sub_points is not None: # Finalize previous item if any
-                current_item_sub_points = None
-            parsed_data.append({
-                "type": "main_heading",
-                "title": main_heading_match.group(1).strip()
-            })
-            continue
-
-        # Try to match numbered item (e.g., 1. **Title** – Description)
-        # Using a more flexible separator (– or -)
-        item_match = re.match(r"^(\d+\.)\s+\*\*(.*?)\*\*\s*[–-]\s*(.*)$", line)
-        if item_match:
-            if current_item_sub_points is not None: # Finalize previous item
-                 current_item_sub_points = None
-            item_data = {
-                "type": "item",
-                "number": item_match.group(1).strip(),
-                "title": item_match.group(2).strip(),
-                "description": item_match.group(3).strip(),
-                "sub_points": []
-            }
-            parsed_data.append(item_data)
-            current_item_sub_points = item_data["sub_points"] # Store ref to add sub-points
-            continue
-
-        # Try to match sub-bullet (e.g., - Sub-point text)
-        sub_point_match = re.match(r"^\s*-\s+(.*)$", line)
-        if sub_point_match and current_item_sub_points is not None:
-            current_item_sub_points.append(sub_point_match.group(1).strip())
-            continue
-
-
-    return parsed_data
-
