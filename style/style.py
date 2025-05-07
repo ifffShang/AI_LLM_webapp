@@ -68,8 +68,8 @@ header, .st-emotion-cache-18ni7ap, .st-emotion-cache-1dp5vir {
 .cards-container-timeline {
     width: 100%;
     background-color: white;
-    border: 3px solid #d9c3f0;  /* Light purple border */
-    border-radius: 12px;
+    # border: 3px solid #d9c3f0;  /* Light purple border */
+    # border-radius: 12px;
     padding: 10px;
     box-shadow: 2px 4px 10px rgba(108, 92, 231, 0.1);
 }

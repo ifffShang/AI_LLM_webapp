@@ -8,27 +8,6 @@ from utils.query_cache import get_cached_answer  # Import the caching utility
 import re
 import urllib.parse # Keep this if you use it for PDF links or other URLs
 
-def display_gatsby_profile():
-    st.markdown("""
-    <div style="background-color: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="width: 60px; height: 60px; border-radius: 50%; background-color: #e9e1ff; display: flex; justify-content: center; align-items: center; color: #7752e6; font-weight: bold; margin-right: 15px;">
-            JG
-        </div>
-        <div>
-            <h2 style="margin: 0; padding: 0; font-size: 18px; font-weight: 600;">Jay Gatsby</h2>
-            <p style="margin: 5px 0 12px 0; font-size: 14px; color: #666;">
-                Mysterious millionaire with a complicated past and an idealistic dream
-            </p>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <span style="background-color: #f4f4f8; color: #666; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Ambitious</span>
-                <span style="background-color: #f4f4f8; color: #666; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Optimistic</span>
-                <span style="background-color: #f4f4f8; color: #666; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Romantic</span>
-                <span style="background-color: #f4f4f8; color: #666; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Deceptive</span>
-                <span style="background-color: #f4f4f8; color: #666; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Lonely</span>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 def display_text(section_data):
     section_title = section_data.get('title', 'Beginning') 
     content_lines_list = section_data.get('content_lines', [])
@@ -179,33 +158,32 @@ with st.spinner("Thinking..."):
         print(result)
 
 #---------html layout---------
-        process_timeline = process_timeline_text(result)
-        display_gatsby_profile()
-        display_text(process_timeline[0])
-        display_vertical_timeline(process_timeline[1:-1])
-        display_text(process_timeline[-1])
-               
+        # process_timeline = process_timeline_text(result)
+        # display_text(process_timeline[0])
+        # display_vertical_timeline(process_timeline[1:-1])
+        # display_text(process_timeline[-1])
+              
     
         query = st.text_input("Ask a question about the book...", placeholder="Type here and press Enter")
 
         if st.button("Answer") and query:
             st.session_state["user_query"] = query
             # if "time" in query:
-            st.switch_page("pages/timelinePage.py")
+            # st.switch_page("pages/timelinePage.py")
             # else:
             # st.switch_page("pages/answerPage.py")
+            st.switch_page("pages/symbolsPage.py")
 
         st.markdown("### 🧠 Answer")
         st.success(result)
         
-        page_numbers = []
-        for doc in source_docs:
-            page_num = doc.metadata.get('page', None)
-            if page_num is not None:
-                page_numbers.append(page_num)
+        # page_numbers = []
+        # for doc in source_docs:
+        #     page_num = doc.metadata.get('page', None)
+        #     if page_num is not None:
+        #         page_numbers.append(page_num)
         
-        # Print page numbers for debugging
-        print("Source document pages:", page_numbers)
+        # print("Source document pages:", page_numbers)
         
     except Exception as e:
         st.error(f"⚠️ {str(e)}")

@@ -22,10 +22,10 @@ query = st.text_input("Ask a question about the book...", placeholder="Type here
 if st.button("Answer") and query:
     st.session_state["user_query"] = query
     # if "time" in query:
-    st.switch_page("pages/timelinePage.py")
+    # st.switch_page("pages/timelinePage.py")
     # else:
         # st.switch_page("pages/answerPage.py")
-
+    st.switch_page("pages/symbolsPage.py")
 
     
 
