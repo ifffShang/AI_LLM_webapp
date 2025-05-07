@@ -29,8 +29,24 @@ def display_gatsby_profile():
         </div>
     </div>
     """, unsafe_allow_html=True)
+def display_text(section_data):
+    section_title = section_data.get('title', 'Beginning') 
+    content_lines_list = section_data.get('content_lines', [])
+    content_html_paragraph = ""
 
-def display_vertical_timeline(timeline_text):
+    if content_lines_list:
+        html_formatted_content = "<br>".join(content_lines_list)
+        content_html_paragraph = f"<p>{html_formatted_content}</p>"
+    else:
+        content_html_paragraph = "<p>No details provided for this section.</p>"
+    begin_html = f"""
+    <div class='card-section-middle' style='margin-top: 20px; margin-bottom: 30px;'>
+        <h4>{section_title}</h4>
+        {content_html_paragraph}
+    </div>
+    """
+    st.markdown(begin_html, unsafe_allow_html=True)
+def process_timeline_text(timeline_text):
     processed_sections = [] # To hold {"title": "Main Section Title", "content_lines": ["- **Bullet...**", ...]}
 
     raw_major_sections = re.split(r'\n?(?=### \*\*)', timeline_text.strip())
@@ -61,12 +77,15 @@ def display_vertical_timeline(timeline_text):
     if not processed_sections:
         st.warning("No timeline sections found in the expected format. The LLM output might not match the prompt's requested structure.")
         return
-    
+    return processed_sections
+def display_vertical_timeline(processed_sections):
+   
     # ---- HTML Generation ----
     html_parts = [
         "<div class='cards-container-timeline'>",
         "<div class='cards-line'>", # This div has the ::before pseudo-element for the vertical line
-        "<h2 style='text-align: left; width:100%; padding-left:10px; margin-bottom:20px;'>Timeline</h2>"
+        "<h2 style='text-align: left; width:100%; padding-left:10px; margin-bottom:20px;'>Timeline</h2>",
+
     ]
     
     for idx, section_data in enumerate(processed_sections):
@@ -96,24 +115,19 @@ def display_vertical_timeline(timeline_text):
         """
         section_html_content += pdf_link_html
 
-        title_has_numbers = any(char.isdigit() for char in current_card_title)
         card_class = ''
-        if not title_has_numbers: 
-            card_class = 'card-section-middle' 
-        elif idx % 2 == 0:  
+        if idx % 2 == 0:  
             card_class = 'card-section-left'
         else:  
             card_class = 'card-section-right'
         
         html_parts.append(f"<div class='{card_class}'>{section_html_content}</div>")
-
     html_parts.append("</div></div>") # Close .cards-line and .cards-container-timeline
     final_html = "".join(html_parts)
     st.markdown(final_html, unsafe_allow_html=True)
 
     
       
-    
 if "user_query" not in st.session_state:
     st.warning("Please ask a question first.")
     st.stop()
@@ -158,9 +172,15 @@ with st.spinner("Thinking..."):
         
         # timeline_query = "Create a detailed timeline of Jay Gatsby's life with key events in chronological order"
             result, source_docs, from_cache = get_cached_answer(prompt, qa_chain)
-        display_gatsby_profile()
+
         print(result)
-        
+
+#---------html layout---------
+        process_timeline = process_timeline_text(result)
+        display_gatsby_profile()
+        display_text(process_timeline[0])
+        display_vertical_timeline(process_timeline[1:-1])
+        display_text(process_timeline[-1])
     # Parse the result into structured timeline events
 #         result = """
 #         ### **Early Life (Late 1890s - 1910s)**
@@ -199,7 +219,7 @@ with st.spinner("Thinking..."):
 # - Nick reflects on Gatsby's belief in the **green light** and ends with:  
 # *"So we beat on, boats against the current, borne back ceaselessly into the past."*
 #         """
-        display_vertical_timeline(result)
+
 
             
     
