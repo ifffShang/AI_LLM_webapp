@@ -61,7 +61,7 @@ def load_faiss_index(path="faiss_index.pkl"):
 def setup_chain():
     db = load_faiss_index()
     if db is None:
-        loader = PyPDFLoader("the-great-gatsby.pdf")
+        loader = PyPDFLoader("static/the-great-gatsby.pdf")
         pages = loader.load_and_split()
         splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=500)
         texts = splitter.split_documents(pages)

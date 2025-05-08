@@ -108,7 +108,7 @@ def display_vertical_timeline(processed_sections):
 
         pdf_link_html = f"""
         <div style="text-align: right; margin-top: 10px;">
-            <a href="the-great-gatsby.pdf#page={pdf_page_num}" target="_blank" style="display: inline-block; background-color: #5d4ba1; color: white; 
+            <a href="static/the-great-gatsby.pdf#page={pdf_page_num}" target="_blank" style="display: inline-block; background-color: #5d4ba1; color: white; 
                        padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px;">
                        📖 Ref Source {pdf_page_num}</a>
         </div>
@@ -190,13 +190,15 @@ with st.spinner("Thinking..."):
 
         if st.button("Answer") and query:
             st.session_state["user_query"] = query
-            # if "time" in query:
-            st.switch_page("pages/timelinePage.py")
-            # else:
-            # st.switch_page("pages/answerPage.py")
+            if "time" in query:
+                st.switch_page("pages/timelinePage.py")
+            elif "character" in query:
+                st.switch_page("pages/answerPage.py")
+            else:
+                st.switch_page("pages/symbolsPage.py")
 
-        st.markdown("### 🧠 Answer")
-        st.success(result)
+        # st.markdown("### 🧠 Answer")
+        # st.success(result)
         
         page_numbers = []
         for doc in source_docs:

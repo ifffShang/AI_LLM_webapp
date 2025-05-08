@@ -4,8 +4,7 @@ st.set_page_config(page_title="Symbols", layout="centered", initial_sidebar_stat
 from utils.qa_chain import setup_chain  # or repeat the setup_chain code here
 from utils.query_cache import get_cached_answer  # Import the caching utility
 import re
-import urllib.parse # Keep this if you use it for PDF links or other URLs
-
+from pages.pdfpage import view_pdf_with_navigation
 def process_text(timeline_text):
     processed_sections = [] # To hold {"title": "Main Section Title", "content_lines": ["- **Bullet...**", ...]}
 
@@ -153,9 +152,9 @@ def display_symbol_page(symbol_data):
         references_html += f"""
         <div class="reference-card">
             <p class="reference-text">{symbol_tabs[i]}</p>
-            <button class="page-button">
-                <span class="book-icon">📖</span> Go to page 1
-            </button>
+            <a href="pages/pdfpage.py" class="page-link">
+            <span class="book-icon">📖</span> Go to page {i+1}
+        </a>
         </div>
         """
 
@@ -292,7 +291,7 @@ if "user_query" not in st.session_state:
     st.warning("Please ask a question first.")
     st.stop()
 
-# qa_chain = setup_chain()
+qa_chain = setup_chain()
 query = st.session_state["user_query"]
 prompt = f"""
 The user is asking about: "{query}"
@@ -324,59 +323,61 @@ st.markdown(f"""
 
 """, unsafe_allow_html=True)
 
-test= """
-    ### **Beginning**
-- **Overview:** The novel *The Great York Gatsby* by F. Scott Fitzgerald is rich with symbols that represent themes of the American Dream, wealth, and social class. Key symbols include the green light, the Valley of Ashes, and the eyes of Dr. T.J. Eckleburg.
+# test= """
+#     ### **Beginning**
+# - **Overview:** The novel *The Great York Gatsby* by F. Scott Fitzgerald is rich with symbols that represent themes of the American Dream, wealth, and social class. Key symbols include the green light, the Valley of Ashes, and the eyes of Dr. T.J. Eckleburg.
 
-### **Symbols in *The Great Gatsby***
-- **The Green Light:** Represents Gatsby's hopes and dreams, particularly his longing for Daisy. It is located at the end of Daisy's dock and is a constant reminder of his unattainable desire.
-- **The Valley of Ashes:** A desolate area between West Egg and New York City, symbolizing the moral and social decay hidden beneath the surface of the wealthy. It is where the working class lives, in stark contrast to the opulence of the Eggs.
-- **The Eyes of Dr. T.J. Eckleburg:** A billboard with the eyes of an optometrist, symbolizing the moral decay of society and the loss of spiritual values. They watch over the Valley of Ashes like a god.
+# ### **Symbols in *The Great Gatsby***
+# - **The Green Light:** Represents Gatsby's hopes and dreams, particularly his longing for Daisy. It is located at the end of Daisy's dock and is a constant reminder of his unattainable desire.
+# - **The Valley of Ashes:** A desolate area between West Egg and New York City, symbolizing the moral and social decay hidden beneath the surface of the wealthy. It is where the working class lives, in stark contrast to the opulence of the Eggs.
+# - **The Eyes of Dr. T.J. Eckleburg:** A billboard with the eyes of an optometrist, symbolizing the moral decay of society and the loss of spiritual values. They watch over the Valley of Ashes like a god.
 
-### **Key Events in the Novel**
-- **Gatsby's Parties:** Lavish gatherings at Gatsby's mansion, symbolizing the excess and superficiality of the Roaring Twenties. They are designed to attract Daisy's attention.
-- **Gatsby's Reunion with Daisy:** The moment Gatsby and Daisy reconnect, symbolizing his attempt to recapture the past and his belief in the possibility of rewriting history.
-- **Myrtle's Death:** Myrtle is hit by Daisy driving Gatsby's car, symbolizing the destructive power of wealth and the carelessness of the upper class.
-- **Gatsby's Death:** Gatsby is shot by George Wilson, who believes Gatsby is responsible for Myrtle's death. His death symbolizes the end of the American Dream and the emptiness of material success.
+# ### **Key Events in the Novel**
+# - **Gatsby's Parties:** Lavish gatherings at Gatsby's mansion, symbolizing the excess and superficiality of the Roaring Twenties. They are designed to attract Daisy's attention.
+# - **Gatsby's Reunion with Daisy:** The moment Gatsby and Daisy reconnect, symbolizing his attempt to recapture the past and his belief in the possibility of rewriting history.
+# - **Myrtle's Death:** Myrtle is hit by Daisy driving Gatsby's car, symbolizing the destructive power of wealth and the carelessness of the upper class.
+# - **Gatsby's Death:** Gatsby is shot by George Wilson, who believes Gatsby is responsible for Myrtle's death. His death symbolizes the end of the American Dream and the emptiness of material success.
 
-### **Final Summary**
-- **Reflection:** Gatsby's life is a tragic pursuit of the American Dream, marked by wealth, love, and ultimately, disillusionment. His legacy is one of unfulfilled dreams and the hollowness of the upper class.
-- **Quote:** *"So we beat on, boats against the current, borne back ceaselessly into the past."* This quote encapsulates Gatsby's relentless pursuit of the past and the futility of his dreams.
-       """
+# ### **Final Summary**
+# - **Reflection:** Gatsby's life is a tragic pursuit of the American Dream, marked by wealth, love, and ultimately, disillusionment. His legacy is one of unfulfilled dreams and the hollowness of the upper class.
+# - **Quote:** *"So we beat on, boats against the current, borne back ceaselessly into the past."* This quote encapsulates Gatsby's relentless pursuit of the past and the futility of his dreams.
+#        """
 
 with st.spinner("Thinking..."):
     try:
-    #     result, source_docs,from_cache = get_cached_answer(prompt, qa_chain)
-    #     if from_cache:
-    #         print("from cache")
-    #         st.success("Retrieved from cache")
-    #     else:
-    #         print("not from cache")
+        result, source_docs,from_cache = get_cached_answer(prompt, qa_chain)
+        if from_cache:
+            print("from cache")
+            st.success("Retrieved from cache")
+        else:
+            print("not from cache")
         
-    #     # timeline_query = "Create a detailed timeline of Jay Gatsby's life with key events in chronological order"
-    #         result, source_docs, from_cache = get_cached_answer(prompt, qa_chain)
+        # timeline_query = "Create a detailed timeline of Jay Gatsby's life with key events in chronological order"
+            result, source_docs, from_cache = get_cached_answer(prompt, qa_chain)
 
-        # print(result)
+        print(result)
 
 #---------html layout---------
-        symbol_data =  process_text(test)
+        symbol_data =  process_text(result)
         print("----")
         print(symbol_data[1]["bullet_points"])
         display_symbol_page(symbol_data)
+        
 
-              
+
     
         query = st.text_input("Ask a question about the book...", placeholder="Type here and press Enter")
 
         if st.button("Answer") and query:
             st.session_state["user_query"] = query
-            # if "time" in query:
-            # st.switch_page("pages/timelinePage.py")
-            # else:
-            # st.switch_page("pages/answerPage.py")
-            st.switch_page("pages/symbolsPage.py")
+            if "life and experiences" in query:
+                st.switch_page("pages/timelinePage.py")
+            elif "character" in query:
+                st.switch_page("pages/answerPage.py")
+            else:
+                st.switch_page("pages/symbolsPage.py")
 
-        st.markdown("### 🧠 Answer")
+        # st.markdown("### 🧠 Answer")
         # st.success(result)
         
         # page_numbers = []

@@ -21,11 +21,12 @@ query = st.text_input("Ask a question about the book...", placeholder="Type here
 
 if st.button("Answer") and query:
     st.session_state["user_query"] = query
-    # if "time" in query:
-    # st.switch_page("pages/timelinePage.py")
-    # else:
-        # st.switch_page("pages/answerPage.py")
-    st.switch_page("pages/symbolsPage.py")
+    if "life and experiences" in query:
+        st.switch_page("pages/timelinePage.py")
+    elif "character" in query:
+        st.switch_page("pages/answerPage.py")
+    else:
+        st.switch_page("pages/symbolsPage.py")
 
     
 
