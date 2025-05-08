@@ -40,6 +40,7 @@ def process_text(timeline_text):
 
 def display_symbol_page(symbol_data):
     
+    
     # First, build the list of tab names
     symbol_tabs = []
     
@@ -95,7 +96,7 @@ def display_symbol_page(symbol_data):
                         with col1:
                             st.markdown(f"""
                             <div class="card-long">
-                                <h3 style="color: #a98bf7; margin-bottom: 15px; word-wrap: break-word;">{points[0]['title']}</h3>
+                                <h3 style="color: #5e29e3; margin-bottom: 15px; word-wrap: break-word;">{points[0]['title']}</h3>
                                 <p style="color: #555; flex-grow: 1; overflow-wrap: break-word;">{points[0]['detail']}</p>
                             </div>
                             """, unsafe_allow_html=True)
@@ -128,7 +129,7 @@ def display_symbol_page(symbol_data):
                         with col2:
                             st.markdown(f"""
                             <div class="card-long">
-                                <h3 style="color: #a98bf7; margin-bottom: 15px; word-wrap: break-word;">{points[3]['title']}</h3>
+                                <h3 style="color: #5e29e3; margin-bottom: 15px; word-wrap: break-word;">{points[3]['title']}</h3>
                                 <p style="color: #555; flex-grow: 1; overflow-wrap: break-word;">{points[3]['detail']}</p>
                             </div>
                             """, unsafe_allow_html=True)
@@ -144,7 +145,30 @@ def display_symbol_page(symbol_data):
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    
+    # Initialize the HTML string
+    references_html = ""
+
+    # Build HTML for reference cards
+    for i in range(len(symbol_tabs)):
+        references_html += f"""
+        <div class="reference-card">
+            <p class="reference-text">{symbol_tabs[i]}</p>
+            <button class="page-button">
+                <span class="book-icon">📖</span> Go to page 1
+            </button>
+        </div>
+        """
+
+    # Output the complete HTML structure
+    st.markdown(f"""
+    
+        <h3 style="color: #5e29e3; text-align: center; margin-bottom: 15px; word-wrap: break-word;">Page References</h3>
+        
+        <div class="reference-cards">
+            {references_html}
+        </div>
+    
+    """, unsafe_allow_html=True)
                         
 #html
     st.markdown("""
@@ -195,6 +219,7 @@ def display_symbol_page(symbol_data):
         overflow-y: auto; /* Add scrolling if content exceeds height */
     }
     .card-long {
+        
         height: 500px; 
         min-height: 200px;
         max-height: 300px;
@@ -207,9 +232,59 @@ def display_symbol_page(symbol_data):
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         overflow-y: auto; 
                 }
+    .reference-cards {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .reference-card {
+        flex: 1;
+        width: 30%;
+        background-color: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        min-height: 100px;
+        margin-bottom: 10px;
+    }
+    
+    .reference-text {
+        color: #555;
+        margin-bottom: 15px;
+        flex-grow: 1;
+    }
+    
+    .page-button {
+        background-color: white;
+        color: #a98bf7;
+        border: 1px solid #a98bf7;
+        border-radius: 5px;
+        padding: 8px 10px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .book-icon {
+        margin-right: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
+def display_references(symbol_data):
+    st.markdown("## References")
+    for symbol in symbol_data:
+        st.markdown(f"### {symbol['title']}")
+        for point in symbol['bullet_points']:
+            st.markdown(f"- {point}")
 
 
 
