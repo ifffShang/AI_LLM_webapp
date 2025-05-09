@@ -1,4 +1,4 @@
-## install dependency for utils/qa.chain.py
+## Install dependency for utils/qa.chain.py
 pip install langchain faiss-cpu sentence-transformers python-dotenv requests
 
 pip install pypdf
